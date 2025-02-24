@@ -30,6 +30,10 @@ class Manual(db.Model):
     numero_parte_componente = db.Column(db.String(50), nullable=False)
     pdf_path = db.Column(db.String(255), nullable=False)
 
+@app.route('/')
+def home():
+    return jsonify({'message': 'API de Manuales funcionando correctamente'}), 200
+
 @app.route('/manuals', methods=['GET'])
 def get_manuals():
     manuals = Manual.query.all()
@@ -44,6 +48,23 @@ def get_manuals():
         'numero_parte_componente': m.numero_parte_componente,
         'pdf_path': m.pdf_path
     } for m in manuals])
+
+@app.route('/manuals/<int:id>', methods=['GET'])
+def get_manual(id):
+    manual = Manual.query.get(id)
+    if not manual:
+        return jsonify({'error': 'Manual no encontrado'}), 404
+    return jsonify({
+        'id': manual.id,
+        'nombre': manual.nombre,
+        'ata': manual.ata,
+        'numero_parte_manual': manual.numero_parte_manual,
+        'fabricante': manual.fabricante,
+        'numero_revision': manual.numero_revision,
+        'fecha_publicacion': manual.fecha_publicacion.strftime('%Y-%m-%d'),
+        'numero_parte_componente': manual.numero_parte_componente,
+        'pdf_path': manual.pdf_path
+    })
 
 @app.route('/manuals', methods=['POST'])
 def add_manual():
@@ -66,6 +87,40 @@ def add_manual():
     db.session.commit()
 
     return jsonify({'message': 'Manual agregado exitosamente'}), 201
+
+@app.route('/manuals/<int:id>', methods=['PUT'])
+def update_manual(id):
+    manual = Manual.query.get(id)
+    if not manual:
+        return jsonify({'error': 'Manual no encontrado'}), 404
+
+    data = request.json
+    manual.nombre = data.get('nombre', manual.nombre)
+    manual.ata = data.get('ata', manual.ata)
+    manual.numero_parte_manual = data.get('numero_parte_manual', manual.numero_parte_manual)
+    manual.fabricante = data.get('fabricante', manual.fabricante)
+    manual.numero_revision = data.get('numero_revision', manual.numero_revision)
+    manual.fecha_publicacion = data.get('fecha_publicacion', manual.fecha_publicacion)
+    manual.numero_parte_componente = data.get('numero_parte_componente', manual.numero_parte_componente)
+    
+    db.session.commit()
+    return jsonify({'message': 'Manual actualizado correctamente'})
+
+@app.route('/manuals/<int:id>', methods=['DELETE'])
+def delete_manual(id):
+    manual = Manual.query.get(id)
+    if not manual:
+        return jsonify({'error': 'Manual no encontrado'}), 404
+
+    db.session.delete(manual)
+    db.session.commit()
+    return jsonify({'message': 'Manual eliminado correctamente'})
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
+
 
 if __name__ == '__main__':
     with app.app_context():
