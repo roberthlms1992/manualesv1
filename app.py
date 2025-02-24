@@ -5,7 +5,12 @@ import os
 
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    raise ValueError("DATABASE_URL no está configurada. Asegúrate de definirla en Render.")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
